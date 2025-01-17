@@ -11,9 +11,6 @@ importers:
       '@internationalized/date':
         specifier: ^3.7.0
         version: 3.7.0
-      date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.17.0
@@ -30,6 +27,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       eslint:
         specifier: ^9.17.0
         version: 9.18.0(jiti@1.21.7)

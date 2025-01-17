@@ -1,5 +1,17 @@
-import { type CalendarDate, DateFormatter, type DateValue, createCalendar, startOfMonth, startOfWeek, toCalendar, toCalendarDate, today } from "@internationalized/date";
-import { format as f } from "date-fns";
+import {
+  type CalendarDate,
+  DateFormatter,
+  type DateValue,
+  type DayOfWeek,
+  createCalendar,
+  getWeeksInMonth,
+  isSameDay,
+  startOfMonth,
+  startOfWeek,
+  toCalendar,
+  toCalendarDate,
+  today,
+} from "@internationalized/date";
 
 import { createContext, forwardRef, useContext, useMemo, useState } from "hono/jsx";
 
@@ -8,6 +20,7 @@ import { createContext, forwardRef, useContext, useMemo, useState } from "hono/j
 type CalendarStateArgs = {
   locale: string;
   defaultValue?: DateValue;
+  firstDayOfWeek?: DayOfWeek;
 };
 
 interface CalendarState {
@@ -16,8 +29,10 @@ interface CalendarState {
   focusedValue: CalendarDate;
   timezone: string;
   weekDays: string[];
+  weeksInMonth: number;
   toNext: () => void;
   toPrev: () => void;
+  getDatesInWeek: (index: number) => CalendarDate[] | null;
 }
 
 const useCalendarState = (args: CalendarStateArgs) => {
@@ -30,19 +45,24 @@ const useCalendarState = (args: CalendarStateArgs) => {
   const focusedValue = useMemo(() => calendarValue || toCalendar(today(timezone), calendar), [calendarValue, timezone, calendar]);
   const [startDate, setStartDate] = useState(() => startOfMonth(focusedValue));
   const weekDays = useMemo(() => {
-    const start = startOfWeek(focusedValue, args.locale);
+    const start = startOfWeek(focusedValue, args.locale, args.firstDayOfWeek);
     return Array.from({ length: 7 }, (_, i) => {
       const date = start.add({ days: i });
       return formatter.format(date.toDate(timezone));
     });
-  }, [focusedValue, args.locale, formatter, timezone]);
+  }, [focusedValue, args.locale, args.firstDayOfWeek, formatter, timezone]);
+  const weeksInMonth = useMemo(() => getWeeksInMonth(startDate, args.locale, args.firstDayOfWeek), [startDate, args.locale, args.firstDayOfWeek]);
 
   return {
     value: calendarValue,
-    setValue,
+    setValue: (val) => {
+      setValue(val ? toCalendar(toCalendarDate(val), calendar) : null);
+      setStartDate(startOfMonth(val || focusedValue));
+    },
     focusedValue,
     timezone,
     weekDays,
+    weeksInMonth,
     toNext: () => {
       const start = startDate.add({ months: 1 });
       setStartDate(start);
@@ -52,6 +72,12 @@ const useCalendarState = (args: CalendarStateArgs) => {
       const start = startDate.subtract({ months: 1 });
       setStartDate(start);
       setValue(start);
+    },
+    getDatesInWeek: (index: number) => {
+      const week = startDate.add({ weeks: index });
+      const start = startOfWeek(week, args.locale, args.firstDayOfWeek);
+
+      return Array.from({ length: 7 }, (_, i) => start.add({ days: i }));
     },
   } satisfies CalendarState;
 };
@@ -97,18 +123,18 @@ const CalendarNavigateButton = forwardRef<HTMLButtonElement, NavigateButtonProps
 
 // ---- CalendarNow.tsx ----
 
-type NowProps = {
-  format?: string;
+type DisplayMonthProps = {
   className?: string;
+  render?: (date: Date) => ReactNode;
 };
 
-const CalendarNow = forwardRef<HTMLDivElement, NowProps>((props, ref) => {
-  const { format, ...rest } = props;
+const CalendarDisplayMonth = forwardRef<HTMLDivElement, DisplayMonthProps>((props, ref) => {
+  const { render, ...rest } = props;
   const { state } = useContext(CalendarContext);
 
   return state ? (
     <div ref={ref} {...rest}>
-      {f(state.focusedValue.toDate(state.timezone), format ?? "yyyy-MM-dd")}
+      {render?.(state.focusedValue.toDate(state.timezone)) ?? `${state.focusedValue.year}年${state.focusedValue.month + 1}月`}
     </div>
   ) : (
     <></>
@@ -119,22 +145,104 @@ const CalendarNow = forwardRef<HTMLDivElement, NowProps>((props, ref) => {
 
 type WeekdaysProps = {
   className?: string;
-  renderWeekday?: (day: string) => ReactNode;
+  render?: (day: string) => ReactNode;
 };
 
 const CalendarWeekdays = forwardRef<HTMLDivElement, WeekdaysProps>((props, ref) => {
-  const { renderWeekday, ...rest } = props;
+  const { render, ...rest } = props;
   const { state } = useContext(CalendarContext);
 
   return state ? (
     <div ref={ref} {...rest}>
       {state.weekDays.map((day) => (
-        <div key={day}>{renderWeekday?.(day) ?? day}</div>
+        <div key={day}>{render?.(day) ?? day}</div>
       ))}
     </div>
   ) : (
     <></>
   );
+});
+
+// ---- CalendarRows.tsx ----
+
+type CalendarRenderingCellProps = {
+  date: CalendarDate;
+  day: number;
+};
+
+type CalendarRowsProps = {
+  className?: string;
+  row?: (row: ReactNode) => ReactNode;
+  cell?: (cell: CalendarRenderingCellProps) => ReactNode;
+};
+
+const CalendarRows = forwardRef<HTMLDivElement, CalendarRowsProps>((props, ref) => {
+  const { row, cell, ...rest } = props;
+  const { state } = useContext(CalendarContext);
+
+  return state ? (
+    <div ref={ref} {...rest}>
+      {Array.from({ length: state.weeksInMonth }, (_, i) => {
+        const dates = state.getDatesInWeek(i);
+        if (dates === null) {
+          return null;
+        }
+
+        const cells = dates.map((date) => {
+          const props = { date, day: date.day } satisfies CalendarRenderingCellProps;
+          return cell?.(props) ?? date.day;
+        });
+
+        return row?.(cells) ?? <div key={dates[0]}>{cells}</div>;
+      })}
+    </div>
+  ) : (
+    <></>
+  );
+});
+
+// ---- CalendarRow.tsx ----
+
+type CalendarRowProps = {
+  children?: ReactNode;
+  className?: string;
+};
+
+const CalendarRow = forwardRef<HTMLDivElement, CalendarRowProps>((props, ref) => {
+  const { ...rest } = props;
+
+  return <div ref={ref} {...rest} />;
+});
+
+// ---- CalendarCell.tsx ----
+
+type CalendarCellCallbackProps = {
+  date: Date;
+};
+
+type CalendarCellProps = {
+  cell: CalendarRenderingCellProps;
+  children?: ReactNode;
+  className?: string;
+  isSelectable?: (args: CalendarCellCallbackProps) => boolean;
+  isDisabled?: (args: CalendarCellCallbackProps) => boolean;
+};
+
+const CalendarCell = forwardRef<HTMLButtonElement, CalendarCellProps>((props, ref) => {
+  const { cell, isSelectable, isDisabled, ...rest } = props;
+  const { state } = useContext(CalendarContext);
+  const args = useMemo(() => {
+    if (state?.timezone) {
+      return { date: cell.date.toDate(state.timezone) } satisfies CalendarCellCallbackProps;
+    }
+
+    throw new Error("CalendarCell must be used within a CalendarContext");
+  }, [cell, state?.timezone]);
+  const handler = isSelectable?.(args) ? () => state?.setValue(cell.date) : () => {};
+  const disabled = isDisabled?.(args) || false;
+  const active = state?.value ? isSameDay(cell.date, state?.value) : false;
+
+  return <button ref={ref} {...rest} onClick={handler} disabled={disabled} data-active={active} />;
 });
 
 // ---- CalendarRoot.tsx ----
@@ -143,13 +251,12 @@ type CalendarRootProps = {
   locale: string;
   children?: ReactNode;
   className?: string;
+  firstDayOfWeek?: DayOfWeek;
 };
 
 const Calendar = forwardRef<HTMLDivElement, CalendarRootProps>((props, ref) => {
-  const { locale, ...rest } = props;
-  const state = useCalendarState({ locale });
-
-  console.log("debugger", state);
+  const { locale, firstDayOfWeek, ...rest } = props;
+  const state = useCalendarState({ locale, firstDayOfWeek });
 
   return (
     <CalendarContext.Provider value={{ state }}>
@@ -162,20 +269,29 @@ const Calendar = forwardRef<HTMLDivElement, CalendarRootProps>((props, ref) => {
 
 const Root = Calendar;
 const NavigateButton = CalendarNavigateButton;
-const Now = CalendarNow;
+const DisplayMonth = CalendarDisplayMonth;
 const Weekdays = CalendarWeekdays;
+const Rows = CalendarRows;
+const Row = CalendarRow;
+const Cell = CalendarCell;
 
 export {
   Calendar,
   CalendarNavigateButton,
-  CalendarNow,
+  CalendarDisplayMonth,
   CalendarWeekdays,
+  CalendarRows,
+  CalendarRow,
+  CalendarCell,
 
   //
   Root,
   NavigateButton,
-  Now,
+  DisplayMonth,
   Weekdays,
+  Rows,
+  Row,
+  Cell,
 };
 
 export type { NavigateButtonProps };

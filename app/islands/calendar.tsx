@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { useCallback } from "hono/jsx";
 import * as HonoCalendar from "../lib/calendar";
 
@@ -14,18 +15,43 @@ const NavigateButton = (props: HonoCalendar.NavigateButtonProps) => {
 const Calendar = () => {
   const isDisabledToGoPrev = useCallback((d: Date) => d.getFullYear() < 2025, []);
   const isDisabledToGoNext = useCallback(() => false, []);
+  const isSelectable = useCallback(({ date: d }: { date: Date }) => {
+    if (d.getMonth() === 0) {
+      return d.getDate() >= 19;
+    }
+
+    return d.getMonth() === 1;
+  }, []);
+  const isDisabled = useCallback(({ date: d }: { date: Date }) => !isSelectable({ date: d }), [isSelectable]);
 
   return (
-    <HonoCalendar.Root locale="ja-JP" className="w-[468px] mx-auto">
+    <HonoCalendar.Root locale="ja-JP" firstDayOfWeek="mon" className="w-[468px] mx-auto">
       <div className="flex items-center justify-between h-12">
         <NavigateButton direction="prev" isDisabledCallback={isDisabledToGoPrev} />
-        <HonoCalendar.Now className="font-bold text-2xl select-none" format="yyyy年M月" />
+        <HonoCalendar.DisplayMonth className="font-bold text-2xl select-none" render={(d) => format(d, "yyyy年M月")} />
         <NavigateButton direction="next" isDisabledCallback={isDisabledToGoNext} />
       </div>
       <div>
         <HonoCalendar.Weekdays
           className="grid grid-cols-7 h-[60px] text-2xl items-center justify-center"
-          renderWeekday={(day) => <div className="flex items-center justify-center font-bold select-none">{day}</div>}
+          render={(day) => <div className="flex items-center justify-center font-bold select-none">{day}</div>}
+        />
+      </div>
+      <div>
+        <HonoCalendar.Rows
+          row={(row) => <HonoCalendar.CalendarRow className="grid grid-cols-7 h-[72px] items-center">{row}</HonoCalendar.CalendarRow>}
+          cell={(cell) => (
+            <HonoCalendar.CalendarCell
+              className="group flex items-center justify-center h-[72px] text-2xl font-bold text-[#f64850] data-[active]:text-white disabled:text-[#ccc] bg- rounded-full"
+              cell={cell}
+              isSelectable={isSelectable}
+              isDisabled={isDisabled}
+            >
+              <div className="flex items-center justify-center h-[60px] w-[60px] rounded-full bg-[#fff8f8] group-data-[active]:bg-[#f64850] border border-[#f64850] group-disabled:bg-transparent group-disabled:border-none">
+                {cell.day}
+              </div>
+            </HonoCalendar.CalendarCell>
+          )}
         />
       </div>
     </HonoCalendar.Root>
