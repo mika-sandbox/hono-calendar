@@ -14,7 +14,9 @@
     "moduleDetection": "force",
     "noEmit": true,
     "types": ["vite/client"],
-    "jsx": "react-jsx",
+    "jsx": "preserve",
+    "jsxFactory": "createElement",
+    "jsxFragmentFactory": "Fragment",
     "jsxImportSource": "hono/jsx",
 
     /* Linting */

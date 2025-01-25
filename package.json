@@ -1,9 +1,19 @@
 {
-  "name": "vite-project",
+  "name": "@ohmyteeth/hono-calendar",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
+    "lib:build": "vite --config vite.lib.config.ts build",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -14,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.10",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
@@ -25,10 +36,13 @@
     "hono": "^4.6.16",
     "honox": "^0.1.32",
     "postcss": "^8.5.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
-    "vite": "^5.2.12"
+    "vite": "^5.2.12",
+    "vite-plugin-dts": "^4.5.0"
   }
 }

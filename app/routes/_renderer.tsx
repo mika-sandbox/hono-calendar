@@ -1,4 +1,6 @@
 import { Style } from "hono/css";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { createElement } from "hono/jsx";
 import { jsxRenderer } from "hono/jsx-renderer";
 import { Link, Script } from "honox/server";
 

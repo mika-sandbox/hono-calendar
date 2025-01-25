@@ -14,7 +14,8 @@ import {
   today,
 } from "@internationalized/date";
 
-import { createContext, forwardRef, useContext, useMemo, useState } from "hono/jsx";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Fragment, createContext, createElement, forwardRef, useContext, useMemo, useState } from "hono/jsx";
 
 // ---- CalendarState.ts ----
 // ref: https://github.com/adobe/react-spectrum/blob/main/packages/%40react-stately/calendar/src/useCalendarState.ts
@@ -60,7 +61,7 @@ const useCalendarState = (args: CalendarStateArgs) => {
     setValue: (val) => {
       setValue(val ? toCalendar(toCalendarDate(val), calendar) : null);
       setStartDate(startOfMonth(val || focusedValue));
-setFocusedValue(val || focusedValue);
+      setFocusedValue(val || focusedValue);
       args.onChange?.(val?.toDate(timezone) ?? null);
     },
     focusedValue,
