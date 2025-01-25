@@ -4,6 +4,7 @@ import {
   type DateValue,
   type DayOfWeek,
   createCalendar,
+  fromDate,
   getWeeksInMonth,
   isSameDay,
   startOfMonth,
@@ -21,6 +22,7 @@ type CalendarStateArgs = {
   locale: string;
   defaultValue?: DateValue;
   firstDayOfWeek?: DayOfWeek;
+  onChange?: (date: Date | null) => void;
 };
 
 interface CalendarState {
@@ -58,6 +60,7 @@ const useCalendarState = (args: CalendarStateArgs) => {
     setValue: (val) => {
       setValue(val ? toCalendar(toCalendarDate(val), calendar) : null);
       setStartDate(startOfMonth(val || focusedValue));
+      args.onChange?.(val?.toDate(timezone) ?? null);
     },
     focusedValue,
     timezone,
@@ -248,15 +251,25 @@ const CalendarCell = forwardRef<HTMLButtonElement, CalendarCellProps>((props, re
 // ---- CalendarRoot.tsx ----
 
 type CalendarRootProps = {
+  // properties
   locale: string;
   children?: ReactNode;
   className?: string;
   firstDayOfWeek?: DayOfWeek;
+  initialValue?: Date;
+
+  // event handlers
+  onChange?: (date: Date | null) => void;
 };
 
 const Calendar = forwardRef<HTMLDivElement, CalendarRootProps>((props, ref) => {
-  const { locale, firstDayOfWeek, ...rest } = props;
-  const state = useCalendarState({ locale, firstDayOfWeek });
+  const { locale, firstDayOfWeek, initialValue, onChange, ...rest } = props;
+  const state = useCalendarState({
+    locale,
+    firstDayOfWeek,
+    defaultValue: initialValue ? fromDate(initialValue, locale) : undefined,
+    onChange,
+  });
 
   return (
     <CalendarContext.Provider value={{ state }}>
