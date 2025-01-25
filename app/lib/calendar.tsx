@@ -44,7 +44,7 @@ const useCalendarState = (args: CalendarStateArgs) => {
   const timezone = useMemo(() => resolvedOptions.timeZone, [resolvedOptions.timeZone]);
   const calendar = useMemo(() => createCalendar(resolvedOptions.calendar), [resolvedOptions.calendar]);
   const calendarValue = useMemo(() => (value ? toCalendar(toCalendarDate(value), calendar) : null), [value, calendar]);
-  const focusedValue = useMemo(() => calendarValue || toCalendar(today(timezone), calendar), [calendarValue, timezone, calendar]);
+  const [focusedValue, setFocusedValue] = useState(() => calendarValue || toCalendar(today(timezone), calendar));
   const [startDate, setStartDate] = useState(() => startOfMonth(focusedValue));
   const weekDays = useMemo(() => {
     const start = startOfWeek(focusedValue, args.locale, args.firstDayOfWeek);
@@ -60,6 +60,7 @@ const useCalendarState = (args: CalendarStateArgs) => {
     setValue: (val) => {
       setValue(val ? toCalendar(toCalendarDate(val), calendar) : null);
       setStartDate(startOfMonth(val || focusedValue));
+setFocusedValue(val || focusedValue);
       args.onChange?.(val?.toDate(timezone) ?? null);
     },
     focusedValue,
@@ -69,12 +70,12 @@ const useCalendarState = (args: CalendarStateArgs) => {
     toNext: () => {
       const start = startDate.add({ months: 1 });
       setStartDate(start);
-      setValue(start);
+      setFocusedValue(start);
     },
     toPrev: () => {
       const start = startDate.subtract({ months: 1 });
       setStartDate(start);
-      setValue(start);
+      setFocusedValue(start);
     },
     getDatesInWeek: (index: number) => {
       const week = startDate.add({ weeks: index });
