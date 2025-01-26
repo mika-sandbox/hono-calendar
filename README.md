@@ -5,7 +5,7 @@ The Headless Calendar Library for HonoX, build without React dependencies.
 ## Installation
 
 ```bash
-$ npm install hono honox @natsuneko-laboratory/hono-calendar
+$ npm install hono honox @ohmyteeth/hono-calendar
 ```
 
 ## Usage
