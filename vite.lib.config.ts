@@ -1,9 +1,9 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
-// import dts from "vite-plugin-dts";
+import dts from "vite-plugin-dts";
 
 export default defineConfig({
-  // plugins: [dts()],
+  plugins: [dts({ rollupTypes: true, tsconfigPath: "./tsconfig.app.json" })],
   build: {
     lib: {
       entry: resolve(__dirname, "app/lib/calendar.tsx"),

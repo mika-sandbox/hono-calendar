@@ -2,14 +2,15 @@
   "name": "@ohmyteeth/hono-calendar",
   "description": "The Headless Calendar Library for HonoX, build without React dependencies.",
   "license": "MIT",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
-      "import": "./dist/hono-calendar.js"
+      "import": "./dist/hono-calendar.js",
+      "types": "./dist/hono-calendar.d.ts"
     }
   },
   "scripts": {
