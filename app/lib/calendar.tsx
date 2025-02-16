@@ -15,7 +15,7 @@ import {
 } from "@internationalized/date";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Fragment, createContext, createElement, forwardRef, useContext, useMemo, useState } from "hono/jsx";
+import { Fragment, createContext, createElement, forwardRef, useCallback, useContext, useMemo, useState } from "hono/jsx";
 
 // ---- CalendarState.ts ----
 // ref: https://github.com/adobe/react-spectrum/blob/main/packages/%40react-stately/calendar/src/useCalendarState.ts
@@ -104,12 +104,12 @@ type NavigateButtonProps = {
   className?: string;
   children?: ReactNode;
   isDisabledCallback?: (date: Date) => boolean;
+  onNavigate?: () => void;
 };
 
 const CalendarNavigateButton = forwardRef<HTMLButtonElement, NavigateButtonProps>((props, ref) => {
-  const { direction, children, isDisabledCallback, ...rest } = props;
+  const { direction, children, isDisabledCallback, onNavigate, ...rest } = props;
   const { state } = useContext(CalendarContext);
-  const handler = state ? (direction === "prev" ? state.toPrev : state.toNext) : () => {};
   const isDisabled = useMemo(() => {
     if (!state?.focusedValue) {
       return true;
@@ -118,6 +118,17 @@ const CalendarNavigateButton = forwardRef<HTMLButtonElement, NavigateButtonProps
     const val = startOfMonth(state.focusedValue).add({ months: direction === "prev" ? -1 : 1 });
     return isDisabledCallback ? isDisabledCallback(val.toDate(state.timezone)) : false;
   }, [state?.focusedValue, direction, state?.timezone, isDisabledCallback]);
+  const handler = useCallback(() => {
+    if (state) {
+      if (direction === "prev") {
+        state.toPrev();
+      } else {
+        state.toNext();
+      }
+
+      onNavigate?.();
+    }
+  }, [state, direction, onNavigate]);
 
   return (
     <button ref={ref} {...rest} onClick={handler} disabled={isDisabled}>

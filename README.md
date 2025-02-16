@@ -59,6 +59,7 @@ export { CalendarApp };
 - `direction` (`"prev"|"next"`) - The direction of the button.
 - `children?` (`ReactNode`) - The children to render.
 - `isDisableCallback?` : (`(date: Date) => boolean`) - The function to call when the button is disabled.
+- `onNavigate?`: (`() => void`) - The function to call when the button is clicked, invoked after the navigated.
 
 ### `DisplayMonth` Props
 

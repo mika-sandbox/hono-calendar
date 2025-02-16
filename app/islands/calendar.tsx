@@ -25,6 +25,7 @@ const Calendar = () => {
     return d.getMonth() === 1;
   }, []);
   const isDisabled = useCallback(({ date: d }: { date: Date }) => !isSelectable({ date: d }), [isSelectable]);
+  const onNavigated = useCallback(() => console.log("Navigated"), []);
 
   return (
     <div className="container mx-auto flex flex-col space-y-2">
@@ -32,9 +33,9 @@ const Calendar = () => {
 
       <HonoCalendar.Root locale="ja-JP" firstDayOfWeek="mon" className="w-[468px]" onChange={setState}>
         <div className="flex items-center justify-between h-12">
-          <NavigateButton direction="prev" isDisabledCallback={isDisabledToGoPrev} />
+          <NavigateButton direction="prev" isDisabledCallback={isDisabledToGoPrev} onNavigate={onNavigated} />
           <HonoCalendar.DisplayMonth className="font-bold text-2xl select-none" render={(d) => format(d, "yyyy年M月")} />
-          <NavigateButton direction="next" isDisabledCallback={isDisabledToGoNext} />
+          <NavigateButton direction="next" isDisabledCallback={isDisabledToGoNext} onNavigate={onNavigated} />
         </div>
         <div>
           <HonoCalendar.Weekdays
