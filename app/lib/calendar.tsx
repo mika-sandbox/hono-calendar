@@ -15,7 +15,7 @@ import {
 } from "@internationalized/date";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Fragment, createContext, createElement, forwardRef, useCallback, useContext, useMemo, useState } from "hono/jsx";
+import { Fragment, type JSX, createContext, createElement, forwardRef, useCallback, useContext, useMemo, useState } from "hono/jsx";
 
 // ---- CalendarState.ts ----
 // ref: https://github.com/adobe/react-spectrum/blob/main/packages/%40react-stately/calendar/src/useCalendarState.ts
@@ -101,11 +101,9 @@ const CalendarContext = createContext<CalendarContextState>({ state: null });
 
 type NavigateButtonProps = {
   direction: "prev" | "next";
-  className?: string;
-  children?: ReactNode;
   isDisabledCallback?: (date: Date) => boolean;
   onNavigate?: () => void;
-};
+} & JSX.IntrinsicElements["button"];
 
 const CalendarNavigateButton = forwardRef<HTMLButtonElement, NavigateButtonProps>((props, ref) => {
   const { direction, children, isDisabledCallback, onNavigate, ...rest } = props;
@@ -140,9 +138,8 @@ const CalendarNavigateButton = forwardRef<HTMLButtonElement, NavigateButtonProps
 // ---- CalendarNow.tsx ----
 
 type DisplayMonthProps = {
-  className?: string;
   render?: (date: Date) => ReactNode;
-};
+} & JSX.IntrinsicElements["div"];
 
 const CalendarDisplayMonth = forwardRef<HTMLDivElement, DisplayMonthProps>((props, ref) => {
   const { render, ...rest } = props;
@@ -160,9 +157,8 @@ const CalendarDisplayMonth = forwardRef<HTMLDivElement, DisplayMonthProps>((prop
 // ---- CalendarWeekdays.tsx ----
 
 type WeekdaysProps = {
-  className?: string;
   render?: (day: string) => ReactNode;
-};
+} & JSX.IntrinsicElements["div"];
 
 const CalendarWeekdays = forwardRef<HTMLDivElement, WeekdaysProps>((props, ref) => {
   const { render, ...rest } = props;
@@ -187,10 +183,9 @@ type CalendarRenderingCellProps = {
 };
 
 type CalendarRowsProps = {
-  className?: string;
   row?: (row: ReactNode) => ReactNode;
   cell?: (cell: CalendarRenderingCellProps) => ReactNode;
-};
+} & JSX.IntrinsicElements["div"];
 
 const CalendarRows = forwardRef<HTMLDivElement, CalendarRowsProps>((props, ref) => {
   const { row, cell, ...rest } = props;
@@ -219,10 +214,7 @@ const CalendarRows = forwardRef<HTMLDivElement, CalendarRowsProps>((props, ref) 
 
 // ---- CalendarRow.tsx ----
 
-type CalendarRowProps = {
-  children?: ReactNode;
-  className?: string;
-};
+type CalendarRowProps = {} & JSX.IntrinsicElements["div"];
 
 const CalendarRow = forwardRef<HTMLDivElement, CalendarRowProps>((props, ref) => {
   const { ...rest } = props;
@@ -238,11 +230,9 @@ type CalendarCellCallbackProps = {
 
 type CalendarCellProps = {
   cell: CalendarRenderingCellProps;
-  children?: ReactNode;
-  className?: string;
   isSelectable?: (args: CalendarCellCallbackProps) => boolean;
   isDisabled?: (args: CalendarCellCallbackProps) => boolean;
-};
+} & JSX.IntrinsicElements["button"];
 
 const CalendarCell = forwardRef<HTMLButtonElement, CalendarCellProps>((props, ref) => {
   const { cell, isSelectable, isDisabled, ...rest } = props;
@@ -266,14 +256,12 @@ const CalendarCell = forwardRef<HTMLButtonElement, CalendarCellProps>((props, re
 type CalendarRootProps = {
   // properties
   locale: string;
-  children?: ReactNode;
-  className?: string;
   firstDayOfWeek?: DayOfWeek;
   initialValue?: Date;
 
   // event handlers
   onChange?: (date: Date | null) => void;
-};
+} & Omit<JSX.IntrinsicElements["div"], "onChange">;
 
 const Calendar = forwardRef<HTMLDivElement, CalendarRootProps>((props, ref) => {
   const { locale, firstDayOfWeek, initialValue, onChange, ...rest } = props;
